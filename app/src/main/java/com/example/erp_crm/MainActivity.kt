@@ -4,13 +4,17 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.erp_crm.model.ClienteCrmDto
+import com.example.erp_crm.ui.CrmViewModel
 import com.example.erp_crm.ui.theme.ERP_CRMTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,10 +24,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ERP_CRMTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    PantallaCrm(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -31,17 +32,44 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun PantallaCrm(modifier: Modifier = Modifier, viewModel: CrmViewModel = viewModel()) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Button(
+            onClick = { viewModel.sincronizarCrm() },
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
+        ) {
+            Text("Sincronizar CRM Corporativo")
+        }
+
+        if (viewModel.estaCargando.value) {
+            CircularProgressIndicator()
+        }
+
+        if (viewModel.mensajeError.value.isNotEmpty()) {
+            Text(text = viewModel.mensajeError.value, color = MaterialTheme.colorScheme.error)
+        }
+
+        LazyColumn {
+            items(viewModel.clientes) { cliente ->
+                TarjetaCliente(cliente)
+            }
+        }
+    }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    ERP_CRMTheme {
-        Greeting("Android")
+fun TarjetaCliente(cliente: ClienteCrmDto) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = cliente.nombreCompleto, style = MaterialTheme.typography.titleLarge)
+            Text(text = "Empresa: ${cliente.empresa.nombreEmpresa}", style = MaterialTheme.typography.bodyMedium)
+            Text(text = "Email: ${cliente.correo}", style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
